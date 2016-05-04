@@ -6,7 +6,9 @@ import android.app.ActionBar;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.amoli.personalto_dolist.fragments.DatePicker;
+import com.amoli.personalto_dolist.fragments.Meeting;
 import com.amoli.personalto_dolist.fragments.TimePicker;
+import com.amoli.personalto_dolist.fragments.Work;
 import com.github.clans.fab.FloatingActionButton;
 
 import android.location.LocationManager;
@@ -48,7 +50,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import java.sql.Time;
 
 public class MainActivity extends AppCompatActivity {
-
+    int flag=0;
     MyDatabase database;
     FloatingActionButton fab,fabdone;
     Toolbar toolbar;
@@ -113,6 +115,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 slidrawer.animateOpen() ;
                 pl=null;
+                title.setText("");
+                desc.setText("");
+                date.setText("Date");
+                time.setText("Time");;
+                location.setText("Pick a Location");
                 DatePicker.year=null;
                 DatePicker.day=null;
                 DatePicker.month=null;
@@ -120,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
                 TimePicker.minute=null;
                 DatePicker.date=null;
                 TimePicker.time=null;
+                flag=1;
 
             }
         });
@@ -138,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
                 else {
                     slidrawer.animateClose();
+                    flag=0;
                     database.insertData(title.getText().toString(),desc.getText().toString(),cate,pl,DatePicker.date,TimePicker.time);
                 }
             }
@@ -145,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Default fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.flContent, new Today()).commit();
+        fragmentManager.beginTransaction().replace(R.id.flContent, new Work()).commit();
         nvDrawer.getMenu().getItem(0).setChecked(true);
         setTitle(nvDrawer.getMenu().getItem(0).getTitle());
 
@@ -241,16 +250,13 @@ public class MainActivity extends AppCompatActivity {
         Fragment fragment = null;
         Class fragmentClass;
         switch(menuItem.getItemId()) {
-            case R.id.today:
-                fragment =new Today();
+            case R.id.work:
+                fragment =new Work();
                 break;
             case R.id.meeting:
-
+                fragment=new Meeting();
                 break;
-            case R.id.work:
 
-                break;
-            default:
 
         }
 
@@ -288,6 +294,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPostCreate(Bundle state) {
         super.onPostCreate(state);
+    }
+
+    @Override
+    public void onBackPressed() {
+          if(flag==1) {
+              slidrawer.animateClose();
+              flag=0;
+          }
+          else
+              super.onBackPressed();
+
     }
 
 

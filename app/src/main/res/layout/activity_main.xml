@@ -22,15 +22,23 @@
             android:background="?attr/colorPrimaryDark">
         </android.support.v7.widget.Toolbar>
 
+
         <!-- The main content view where fragments are loaded -->
         <FrameLayout
             android:id="@+id/f2Content"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+
         <FrameLayout
             android:id="@+id/flContent"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+
+
+
+
+            </FrameLayout>
+
 
             <com.github.clans.fab.FloatingActionButton
                 android:id="@+id/fab"
@@ -43,9 +51,6 @@
                 fab:fab_colorNormal="@color/app_primary"
                 fab:fab_colorPressed="@color/app_primary_pressed"
                 fab:fab_colorRipple="@color/app_ripple"/>
-            </FrameLayout>
-
-
             <SlidingDrawer
                 android:id="@+id/slidingDrawer"
                 android:layout_width="match_parent"
@@ -80,7 +85,6 @@
                         android:layout_gravity= "bottom|right"
                         android:layout_marginBottom="8dp"
                         android:layout_marginRight="8dp"
-
                         android:src="@drawable/ic_done"
                         fab:fab_colorNormal="@color/app_primary"
                         fab:fab_colorPressed="@color/app_primary_pressed"
@@ -137,7 +141,7 @@
                             android:id="@+id/time"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginLeft="200dp"
+                            android:layout_marginLeft="230dp"
                             android:text="Time"/>
 
                     </RelativeLayout>
