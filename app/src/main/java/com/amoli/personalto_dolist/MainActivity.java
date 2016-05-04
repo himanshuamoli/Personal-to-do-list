@@ -4,6 +4,8 @@ import android.app.Activity;
 
 import android.app.ActionBar;
 import com.github.clans.fab.FloatingActionButton;
+
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.content.Context;
@@ -22,11 +24,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
 import android.support.v7.app.ActionBarDrawerToggle;
 
 import com.amoli.personalto_dolist.fragments.Today;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 
 public class MainActivity extends AppCompatActivity {
     FloatingActionButton fab,fabdone;
@@ -35,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
     ActionBarDrawerToggle mDrawerToggle;
     NavigationView nvDrawer;
     SlidingDrawer slidrawer;
+    Button location;
+    static final int PLACE_PICKER_REQUEST = 1;
+    final LatLngBounds BOUNDS_MOUNTAIN_VIEW = new LatLngBounds(new LatLng(37.398160, -122.180831), new LatLng(37.430610, -121.972090));
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,6 +109,24 @@ public class MainActivity extends AppCompatActivity {
         nvDrawer.getMenu().getItem(0).setChecked(true);
         setTitle(nvDrawer.getMenu().getItem(0).getTitle());
 
+        location=(Button)findViewById(R.id.location);
+
+        location.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    PlacePicker.IntentBuilder intentBuilder =
+                            new PlacePicker.IntentBuilder();
+                    intentBuilder.setLatLngBounds(BOUNDS_MOUNTAIN_VIEW);
+                    Intent intent = intentBuilder.build(MainActivity.this);
+                    startActivityForResult(intent, PLACE_PICKER_REQUEST);
+
+                } catch (GooglePlayServicesRepairableException
+                        | GooglePlayServicesNotAvailableException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public void selectItem(MenuItem menuItem) {
