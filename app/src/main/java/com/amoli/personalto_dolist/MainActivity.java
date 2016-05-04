@@ -3,8 +3,14 @@ package com.amoli.personalto_dolist;
 import android.app.Activity;
 
 import android.app.ActionBar;
+
+import com.afollestad.materialdialogs.MaterialDialog;
+import com.amoli.personalto_dolist.fragments.DatePicker;
+import com.amoli.personalto_dolist.fragments.TimePicker;
 import com.github.clans.fab.FloatingActionButton;
 
+import android.location.LocationManager;
+import android.support.v4.app.DialogFragment;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -25,37 +31,52 @@ import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.widget.Toast;
 
 import com.amoli.personalto_dolist.fragments.Today;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 
+import java.sql.Time;
+
 public class MainActivity extends AppCompatActivity {
+
+    MyDatabase database;
     FloatingActionButton fab,fabdone;
     Toolbar toolbar;
     DrawerLayout mDrawer;
     ActionBarDrawerToggle mDrawerToggle;
     NavigationView nvDrawer;
     SlidingDrawer slidrawer;
-    Button location;
+   public Button location,date,time,category;
     static final int PLACE_PICKER_REQUEST = 1;
+    EditText title,desc;
+    String pl=null;
     final LatLngBounds BOUNDS_MOUNTAIN_VIEW = new LatLngBounds(new LatLng(37.398160, -122.180831), new LatLng(37.430610, -121.972090));
+    String cat[]={"Meeting","Work"},cate;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        database=new MyDatabase(this);
         // Set a Toolbar to replace the ActionBar.
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         fab=(FloatingActionButton)findViewById(R.id.fab);
         fabdone=(FloatingActionButton)findViewById(R.id.fabdone);
+        date=(Button)findViewById(R.id.date);
+        time=(Button)findViewById(R.id.time);
+        category=(Button)findViewById(R.id.category);
+        title=(EditText)findViewById(R.id.title);
+        desc=(EditText)findViewById(R.id.description);
         // Find our drawer view
         mDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         nvDrawer=(NavigationView)findViewById(R.id.nvView);
@@ -91,7 +112,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 slidrawer.animateOpen() ;
-
+                pl=null;
+                DatePicker.year=null;
+                DatePicker.day=null;
+                DatePicker.month=null;
+                TimePicker.hour=null;
+                TimePicker.minute=null;
+                DatePicker.date=null;
+                TimePicker.time=null;
 
             }
         });
@@ -99,7 +127,19 @@ public class MainActivity extends AppCompatActivity {
         fabdone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                slidrawer.animateClose();
+                if(title.getText().toString().equals(""))
+                    Toast.makeText(MainActivity.this, "Enter Title", Toast.LENGTH_SHORT).show();
+                else if(desc.getText().toString().equals(""))
+                    Toast.makeText(MainActivity.this, "Enter Description", Toast.LENGTH_SHORT).show();
+                else if(DatePicker.day==null)
+                    Toast.makeText(MainActivity.this,"Select Date",Toast.LENGTH_SHORT).show();
+                else if(TimePicker.minute==null)
+                    Toast.makeText(MainActivity.this, "Select Time", Toast.LENGTH_SHORT).show();
+
+                else {
+                    slidrawer.animateClose();
+                    database.insertData(title.getText().toString(),desc.getText().toString(),cate,pl,DatePicker.date,TimePicker.time);
+                }
             }
         });
 
@@ -127,6 +167,73 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        date.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogFragment newFragment = new DatePicker(MainActivity.this);
+                newFragment.show(getSupportFragmentManager(),"datepicker");
+            }
+        });
+
+        time.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogFragment newFragment=new TimePicker(MainActivity.this);
+                newFragment.show(getSupportFragmentManager(),"timepicker");
+            }
+        });
+
+        category.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new MaterialDialog.Builder(MainActivity.this)
+                        .title("Category")
+                        .items(cat)
+                        .itemsCallbackSingleChoice(1, new MaterialDialog.ListCallbackSingleChoice() {
+                            @Override
+                            public boolean onSelection(MaterialDialog dialog, View view, int which, CharSequence text) {
+                                /**
+                                 * If you use alwaysCallSingleChoiceCallback(), which is discussed below,
+                                 * returning false here won't allow the newly selected radio button to actually be selected.
+                                 **/
+
+                                cate=cat[which];
+                                category.setText(cate);
+                                return true;
+                            }
+                        })
+                        .positiveText("Done")
+                        .show();
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode,
+                                    int resultCode, Intent data) {
+
+        if (requestCode == PLACE_PICKER_REQUEST
+                && resultCode == Activity.RESULT_OK) {
+
+            final Place place = PlacePicker.getPlace(this, data);
+            final CharSequence name = place.getName();
+            final CharSequence address = place.getAddress();
+            String attributions = (String) place.getAttributions();
+            if (attributions == null) {
+                attributions = "";
+            }
+            StringBuilder s=new StringBuilder();
+            s.append(name);
+            s.append("\n");
+            s.append(address);
+            location.setText(s.toString());
+            pl=s.toString();
+            //mAttributions.setText(Html.fromHtml(attributions));
+
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     public void selectItem(MenuItem menuItem) {

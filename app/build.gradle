@@ -25,5 +25,6 @@ dependencies {
     compile 'com.android.support:design:23.1.1'
     compile 'com.github.clans:fab:1.6.3'
     compile 'com.google.android.gms:play-services:8.4.0'
+    compile('com.github.afollestad.material-dialogs:core:0.8.5.8@aar')
 
 }
