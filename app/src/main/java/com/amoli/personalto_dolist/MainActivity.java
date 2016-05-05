@@ -14,6 +14,7 @@ import com.github.clans.fab.FloatingActionButton;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.support.v4.app.DialogFragment;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
@@ -48,9 +49,12 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.squareup.picasso.Picasso;
 
 import java.sql.Time;
 import java.util.Calendar;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity {
     int flag=0;
@@ -65,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     static final int PLACE_PICKER_REQUEST = 1;
     EditText title,desc;
     TextView tv;
+    CircleImageView profile;
     String pl=null;
     final LatLngBounds BOUNDS_MOUNTAIN_VIEW = new LatLngBounds(new LatLng(37.398160, -122.180831), new LatLng(37.430610, -121.972090));
     String cat[]={"Meeting","Work"},cate;
@@ -75,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent=getIntent();
         String name=intent.getStringExtra("user");
+        Uri uri=Uri.parse(intent.getStringExtra("uri"));
+
         database=new MyDatabase(this);
         // Set a Toolbar to replace the ActionBar.
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -94,6 +101,12 @@ public class MainActivity extends AppCompatActivity {
         View header=nvDrawer.getHeaderView(0);
         tv=(TextView)header.findViewById(R.id.name);
         tv.setText(name);
+        profile=(CircleImageView)header.findViewById(R.id.profileIcon);
+        Picasso.with(this)
+                .load(uri)
+                .placeholder(R.drawable.profile)
+                .error(R.drawable.profile)
+                .into(profile);
 
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawer,toolbar,R.string.navigation_drawer_open,R.string.navigation_drawer_close) {
 
@@ -331,25 +344,5 @@ public class MainActivity extends AppCompatActivity {
         alarmManager.set(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), pendingIntent);
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
 
-        //Set Calendar Value for Snooze Alarm
-        String title=intent.getStringExtra("title");
-        String place=intent.getStringExtra("place");
-        Calendar calendar = Calendar.getInstance();
-        //int snoozeTime = mMinute + SNOOZE_MIN;
-        calendar.add(Calendar.MINUTE, 1); //SNOOZE_MIN = 1;
-        long snoozeTime = calendar.getTimeInMillis();
-        //Build Intent and Pending Intent to Set Snooze Alarm
-        Intent AlarmIntent = new Intent(getBaseContext(), AlarmReceiver.class);
-        AlarmIntent.putExtra("title",title);
-        AlarmIntent.putExtra("place",place);
-        AlarmManager AlmMgr = (AlarmManager)getSystemService(ALARM_SERVICE);
-        int _id = (int)System.currentTimeMillis();
-        AlarmIntent.putExtra("REQUEST CODE", _id);
-        PendingIntent Sender = PendingIntent.getBroadcast(getBaseContext(), _id, AlarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlmMgr.set(AlarmManager.RTC_WAKEUP, snoozeTime, Sender);
-
-    }
 }
