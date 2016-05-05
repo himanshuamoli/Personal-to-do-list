@@ -11,6 +11,8 @@ import com.amoli.personalto_dolist.fragments.TimePicker;
 import com.amoli.personalto_dolist.fragments.Work;
 import com.github.clans.fab.FloatingActionButton;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.location.LocationManager;
 import android.support.v4.app.DialogFragment;
 import android.content.Intent;
@@ -48,6 +50,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 
 import java.sql.Time;
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     int flag=0;
@@ -61,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
    public Button location,date,time,category;
     static final int PLACE_PICKER_REQUEST = 1;
     EditText title,desc;
+    TextView tv;
     String pl=null;
     final LatLngBounds BOUNDS_MOUNTAIN_VIEW = new LatLngBounds(new LatLng(37.398160, -122.180831), new LatLng(37.430610, -121.972090));
     String cat[]={"Meeting","Work"},cate;
@@ -68,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Intent intent=getIntent();
+        String name=intent.getStringExtra("user");
         database=new MyDatabase(this);
         // Set a Toolbar to replace the ActionBar.
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -83,6 +90,11 @@ public class MainActivity extends AppCompatActivity {
         mDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         nvDrawer=(NavigationView)findViewById(R.id.nvView);
         slidrawer=(SlidingDrawer)findViewById(R.id.slidingDrawer);
+
+        View header=nvDrawer.getHeaderView(0);
+        tv=(TextView)header.findViewById(R.id.name);
+        tv.setText(name);
+
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawer,toolbar,R.string.navigation_drawer_open,R.string.navigation_drawer_close) {
 
             /** Called when a drawer has settled in a completely closed state. */
@@ -120,11 +132,8 @@ public class MainActivity extends AppCompatActivity {
                 date.setText("Date");
                 time.setText("Time");;
                 location.setText("Pick a Location");
-                DatePicker.year=null;
-                DatePicker.day=null;
-                DatePicker.month=null;
-                TimePicker.hour=null;
-                TimePicker.minute=null;
+
+
                 DatePicker.date=null;
                 TimePicker.time=null;
                 flag=1;
@@ -139,15 +148,18 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Enter Title", Toast.LENGTH_SHORT).show();
                 else if(desc.getText().toString().equals(""))
                     Toast.makeText(MainActivity.this, "Enter Description", Toast.LENGTH_SHORT).show();
-                else if(DatePicker.day==null)
+                else if(DatePicker.date==null)
                     Toast.makeText(MainActivity.this,"Select Date",Toast.LENGTH_SHORT).show();
-                else if(TimePicker.minute==null)
+                else if(TimePicker.time==null)
                     Toast.makeText(MainActivity.this, "Select Time", Toast.LENGTH_SHORT).show();
 
                 else {
                     slidrawer.animateClose();
                     flag=0;
                     database.insertData(title.getText().toString(),desc.getText().toString(),cate,pl,DatePicker.date,TimePicker.time);
+                    Calendar cal=Calendar.getInstance();
+                    cal.set(DatePicker.year,DatePicker.month,DatePicker.day,TimePicker.hour,TimePicker.minute);
+                    setAlarm(cal);
                 }
             }
         });
@@ -308,4 +320,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void setAlarm(Calendar target){
+
+        Intent intent = new Intent(getBaseContext(), AlarmReceiver.class);
+        intent.putExtra("title",title.getText().toString());
+        intent.putExtra("place",pl);
+        int _id = (int)System.currentTimeMillis();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getBaseContext(), _id, intent, 0);
+        AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), pendingIntent);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+
+        //Set Calendar Value for Snooze Alarm
+        String title=intent.getStringExtra("title");
+        String place=intent.getStringExtra("place");
+        Calendar calendar = Calendar.getInstance();
+        //int snoozeTime = mMinute + SNOOZE_MIN;
+        calendar.add(Calendar.MINUTE, 1); //SNOOZE_MIN = 1;
+        long snoozeTime = calendar.getTimeInMillis();
+        //Build Intent and Pending Intent to Set Snooze Alarm
+        Intent AlarmIntent = new Intent(getBaseContext(), AlarmReceiver.class);
+        AlarmIntent.putExtra("title",title);
+        AlarmIntent.putExtra("place",place);
+        AlarmManager AlmMgr = (AlarmManager)getSystemService(ALARM_SERVICE);
+        int _id = (int)System.currentTimeMillis();
+        AlarmIntent.putExtra("REQUEST CODE", _id);
+        PendingIntent Sender = PendingIntent.getBroadcast(getBaseContext(), _id, AlarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlmMgr.set(AlarmManager.RTC_WAKEUP, snoozeTime, Sender);
+
+    }
 }
