@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     CircleImageView profile;
     String pl=null;
     final LatLngBounds BOUNDS_MOUNTAIN_VIEW = new LatLngBounds(new LatLng(37.398160, -122.180831), new LatLng(37.430610, -121.972090));
-    String cat[]={"Meeting","Work"},cate;
+    String cat[]={"Meeting","Work"},cate="Work";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 slidrawer.animateOpen() ;
-                pl=null;
+                pl="";
                 title.setText("");
                 desc.setText("");
                 date.setText("Date");
