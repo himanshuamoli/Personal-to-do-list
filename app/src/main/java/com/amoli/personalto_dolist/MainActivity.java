@@ -1,5 +1,6 @@
 package com.amoli.personalto_dolist;
 
+import android.Manifest;
 import android.app.Activity;
 
 import android.app.ActionBar;
@@ -13,8 +14,12 @@ import com.github.clans.fab.FloatingActionButton;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v4.app.DialogFragment;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
@@ -53,62 +58,64 @@ import com.squareup.picasso.Picasso;
 
 import java.sql.Time;
 import java.util.Calendar;
+import java.util.Date;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity {
-    int flag=0;
+    int flag = 0;
     MyDatabase database;
-    FloatingActionButton fab,fabdone;
+    FloatingActionButton fab, fabdone;
     Toolbar toolbar;
     DrawerLayout mDrawer;
     ActionBarDrawerToggle mDrawerToggle;
     NavigationView nvDrawer;
     SlidingDrawer slidrawer;
-   public Button location,date,time,category;
+    public Button location, date, time, category;
     static final int PLACE_PICKER_REQUEST = 1;
-    EditText title,desc;
+    EditText title, desc;
     TextView tv;
     CircleImageView profile;
-    String pl=null;
+    String pl = null;
     final LatLngBounds BOUNDS_MOUNTAIN_VIEW = new LatLngBounds(new LatLng(37.398160, -122.180831), new LatLng(37.430610, -121.972090));
-    String cat[]={"Meeting","Work"},cate="Work";
+    String cat[] = {"Meeting", "Work"}, cate = "Work";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Intent intent=getIntent();
-        String name=intent.getStringExtra("user");
-        Uri uri=Uri.parse(intent.getStringExtra("uri"));
+        Intent intent = getIntent();
+        String name = intent.getStringExtra("user");
+        Uri uri = Uri.parse(intent.getStringExtra("uri"));
 
-        database=new MyDatabase(this);
+        database = new MyDatabase(this);
         // Set a Toolbar to replace the ActionBar.
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        fab=(FloatingActionButton)findViewById(R.id.fab);
-        fabdone=(FloatingActionButton)findViewById(R.id.fabdone);
-        date=(Button)findViewById(R.id.date);
-        time=(Button)findViewById(R.id.time);
-        category=(Button)findViewById(R.id.category);
-        title=(EditText)findViewById(R.id.title);
-        desc=(EditText)findViewById(R.id.description);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fabdone = (FloatingActionButton) findViewById(R.id.fabdone);
+        date = (Button) findViewById(R.id.date);
+        time = (Button) findViewById(R.id.time);
+        category = (Button) findViewById(R.id.category);
+        title = (EditText) findViewById(R.id.title);
+        desc = (EditText) findViewById(R.id.description);
         // Find our drawer view
         mDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        nvDrawer=(NavigationView)findViewById(R.id.nvView);
-        slidrawer=(SlidingDrawer)findViewById(R.id.slidingDrawer);
+        nvDrawer = (NavigationView) findViewById(R.id.nvView);
+        slidrawer = (SlidingDrawer) findViewById(R.id.slidingDrawer);
 
-        View header=nvDrawer.getHeaderView(0);
-        tv=(TextView)header.findViewById(R.id.name);
+        View header = nvDrawer.getHeaderView(0);
+        tv = (TextView) header.findViewById(R.id.name);
         tv.setText(name);
-        profile=(CircleImageView)header.findViewById(R.id.profileIcon);
+        profile = (CircleImageView) header.findViewById(R.id.profileIcon);
         Picasso.with(this)
                 .load(uri)
                 .placeholder(R.drawable.profile)
                 .error(R.drawable.profile)
                 .into(profile);
 
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawer,toolbar,R.string.navigation_drawer_open,R.string.navigation_drawer_close) {
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
 
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
@@ -138,18 +145,19 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                slidrawer.animateOpen() ;
-                pl="";
+                slidrawer.animateOpen();
+                pl = "";
                 title.setText("");
                 desc.setText("");
                 date.setText("Date");
-                time.setText("Time");;
+                time.setText("Time");
+
                 location.setText("Pick a Location");
 
 
-                DatePicker.date=null;
-                TimePicker.time=null;
-                flag=1;
+                DatePicker.date = null;
+                TimePicker.time = null;
+                flag = 1;
 
             }
         });
@@ -157,22 +165,31 @@ public class MainActivity extends AppCompatActivity {
         fabdone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(title.getText().toString().equals(""))
+                if (title.getText().toString().equals(""))
                     Toast.makeText(MainActivity.this, "Enter Title", Toast.LENGTH_SHORT).show();
-                else if(desc.getText().toString().equals(""))
+                else if (desc.getText().toString().equals(""))
                     Toast.makeText(MainActivity.this, "Enter Description", Toast.LENGTH_SHORT).show();
-                else if(DatePicker.date==null)
-                    Toast.makeText(MainActivity.this,"Select Date",Toast.LENGTH_SHORT).show();
-                else if(TimePicker.time==null)
+                else if (DatePicker.date == null)
+                    Toast.makeText(MainActivity.this, "Select Date", Toast.LENGTH_SHORT).show();
+                else if (TimePicker.time == null)
                     Toast.makeText(MainActivity.this, "Select Time", Toast.LENGTH_SHORT).show();
 
                 else {
                     slidrawer.animateClose();
-                    flag=0;
-                    database.insertData(title.getText().toString(),desc.getText().toString(),cate,pl,DatePicker.date,TimePicker.time);
-                    Calendar cal=Calendar.getInstance();
-                    cal.set(DatePicker.year,DatePicker.month,DatePicker.day,TimePicker.hour,TimePicker.minute);
+                    flag = 0;
+                    database.insertData(title.getText().toString(), desc.getText().toString(), cate, pl, DatePicker.date, TimePicker.time);
+                    Calendar cal = Calendar.getInstance();
+                    cal.set(DatePicker.year, DatePicker.month, DatePicker.day, TimePicker.hour, TimePicker.minute);
                     setAlarm(cal);
+                    Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.flContent);
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    if (currentFragment instanceof Work) {
+                        fragmentManager.beginTransaction().replace(R.id.flContent, new Work()).commit();
+                    } else if (currentFragment instanceof Meeting) {
+                        fragmentManager.beginTransaction().replace(R.id.flContent, new Meeting()).commit();
+                    }
+
+
                 }
             }
         });
@@ -183,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
         nvDrawer.getMenu().getItem(0).setChecked(true);
         setTitle(nvDrawer.getMenu().getItem(0).getTitle());
 
-        location=(Button)findViewById(R.id.location);
+        location = (Button) findViewById(R.id.location);
 
         location.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -206,15 +223,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 DialogFragment newFragment = new DatePicker(MainActivity.this);
-                newFragment.show(getSupportFragmentManager(),"datepicker");
+                newFragment.show(getSupportFragmentManager(), "datepicker");
             }
         });
 
         time.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DialogFragment newFragment=new TimePicker(MainActivity.this);
-                newFragment.show(getSupportFragmentManager(),"timepicker");
+                DialogFragment newFragment = new TimePicker(MainActivity.this);
+                newFragment.show(getSupportFragmentManager(), "timepicker");
             }
         });
 
@@ -232,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
                                  * returning false here won't allow the newly selected radio button to actually be selected.
                                  **/
 
-                                cate=cat[which];
+                                cate = cat[which];
                                 category.setText(cate);
                                 return true;
                             }
@@ -257,12 +274,12 @@ public class MainActivity extends AppCompatActivity {
             if (attributions == null) {
                 attributions = "";
             }
-            StringBuilder s=new StringBuilder();
+            StringBuilder s = new StringBuilder();
             s.append(name);
             s.append("\n");
             s.append(address);
             location.setText(s.toString());
-            pl=s.toString();
+            pl = s.toString();
             //mAttributions.setText(Html.fromHtml(attributions));
 
         } else {
@@ -274,12 +291,12 @@ public class MainActivity extends AppCompatActivity {
         // Create a new fragment and specify the fragment to show based on nav item clicked
         Fragment fragment = null;
         Class fragmentClass;
-        switch(menuItem.getItemId()) {
+        switch (menuItem.getItemId()) {
             case R.id.work:
-                fragment =new Work();
+                fragment = new Work();
                 break;
             case R.id.meeting:
-                fragment=new Meeting();
+                fragment = new Meeting();
                 break;
 
 
@@ -323,26 +340,34 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-          if(flag==1) {
-              slidrawer.animateClose();
-              flag=0;
-          }
-          else
-              super.onBackPressed();
+        if (flag == 1) {
+            slidrawer.animateClose();
+            flag = 0;
+        } else
+            super.onBackPressed();
 
     }
 
 
-    public void setAlarm(Calendar target){
+    public void setAlarm(Calendar target) {
 
         Intent intent = new Intent(getBaseContext(), AlarmReceiver.class);
-        intent.putExtra("title",title.getText().toString());
-        intent.putExtra("place",pl);
-        int _id = (int)System.currentTimeMillis();
+        intent.putExtra("title", title.getText().toString());
+        intent.putExtra("place", pl);
+        long time = System.currentTimeMillis();
+        String tmpStr = String.valueOf(time);
+        String last4Str = tmpStr.substring(tmpStr.length() - 5);
+        int _id= Integer.valueOf(last4Str);
+        intent.putExtra("id",_id);
+
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getBaseContext(), _id, intent, 0);
-        AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         alarmManager.set(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), pendingIntent);
     }
 
 
+
 }
+
+
+
