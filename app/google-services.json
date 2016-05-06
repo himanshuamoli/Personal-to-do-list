@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "527564575301",
+    "project_id": "personal-to-do-list"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:527564575301:android:684bd903cbabe9ee",
+        "android_client_info": {
+          "package_name": "com.amoli.personalto_dolist"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "527564575301-r5tp66kcce5jp18nhud98fv4lt3tfci4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.amoli.personalto_dolist",
+            "certificate_hash": "C21C6DF9947CC57B0BAD5030E08FDD3DD1A70714"
+          }
+        },
+        {
+          "client_id": "527564575301-co8su511dlmsnuh47bl54pkdfkt89pfb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQFltrOQRxrM_7kTV_gU9O5BmT8oKjrfU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
